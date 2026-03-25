@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblioteca Personal</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<main class="layout">
+    <section class="hero">
+        <div>
+            <p class="eyebrow">Aplicacion web con Spring Boot</p>
+            <h1>Biblioteca personal de Maria</h1>
+            <p>Gestiona libros, califica lecturas terminadas, identifica tus autores mas leidos y carga o guarda la biblioteca en fichero CSV.</p>
+        </div>
+
+        <div class="actions">
+            <a class="button secondary" th:href="@{/libros/exportar}">Guardar a fichero CSV</a>
+            <form th:action="@{/libros/importar}" method="post" enctype="multipart/form-data" class="upload-form">
+                <input type="file" name="archivo" accept=".csv" required>
+                <button class="button" type="submit">Cargar fichero</button>
+            </form>
+        </div>
+    </section>
+
+    <div class="flash success" th:if="${mensaje}" th:text="${mensaje}"></div>
+    <div class="flash error" th:if="${error}" th:text="${error}"></div>
+
+    <section class="grid">
+        <article class="card">
+            <h2>Ingresar libro</h2>
+            <form th:action="@{/libros}" th:object="${libroForm}" method="post" class="form-grid">
+                <label>
+                    <span>Titulo</span>
+                    <input type="text" th:field="*{titulo}">
+                    <small th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}"></small>
+                </label>
+                <label>
+                    <span>Autor</span>
+                    <input type="text" th:field="*{autor}">
+                    <small th:if="${#fields.hasErrors('autor')}" th:errors="*{autor}"></small>
+                </label>
+                <label>
+                    <span>Genero</span>
+                    <input type="text" th:field="*{genero}">
+                    <small th:if="${#fields.hasErrors('genero')}" th:errors="*{genero}"></small>
+                </label>
+                <label>
+                    <span>Paginas</span>
+                    <input type="number" min="1" th:field="*{numeroPaginas}">
+                    <small th:if="${#fields.hasErrors('numeroPaginas')}" th:errors="*{numeroPaginas}"></small>
+                </label>
+                <label>
+                    <span>ISBN</span>
+                    <input type="text" th:field="*{isbn}">
+                    <small th:if="${#fields.hasErrors('isbn')}" th:errors="*{isbn}"></small>
+                </label>
+                <label>
+                    <span>Estado</span>
+                    <select th:field="*{estado}">
+                        <option value="">Selecciona</option>
+                        <option th:each="estado : ${estados}" th:value="${estado}" th:text="${estado.etiqueta}"></option>
+                    </select>
+                    <small th:if="${#fields.hasErrors('estado')}" th:errors="*{estado}"></small>
+                </label>
+                <button class="button" type="submit">Guardar libro</button>
+            </form>
+        </article>
+
+        <article class="card">
+            <h2>Resumen</h2>
+            <div class="summary">
+                <div>
+                    <strong th:text="${#lists.size(libros)}">0</strong>
+                    <span>Total de libros</span>
+                </div>
+                <div>
+                    <strong th:text="${#lists.size(librosNoLeidos)}">0</strong>
+                    <span>No leidos</span>
+                </div>
+            </div>
+            <h3>Autores mas leidos</h3>
+            <p th:if="${#lists.isEmpty(autoresMasLeidos)}">Todavia no hay lecturas finalizadas.</p>
+            <ul th:if="${!#lists.isEmpty(autoresMasLeidos)}">
+                <li th:each="autor : ${autoresMasLeidos}" th:text="${autor}"></li>
+            </ul>
+        </article>
+    </section>
+
+    <section class="card">
+        <h2>Listado alfabetico por titulo</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>Titulo</th>
+                    <th>Autor</th>
+                    <th>Genero</th>
+                    <th>Paginas</th>
+                    <th>ISBN</th>
+                    <th>Estado</th>
+                    <th>Calificacion</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(libros)}">
+                    <td colspan="7">No hay libros registrados.</td>
+                </tr>
+                <tr th:each="libro : ${libros}">
+                    <td th:text="${libro.titulo}"></td>
+                    <td th:text="${libro.autor}"></td>
+                    <td th:text="${libro.genero}"></td>
+                    <td th:text="${libro.numeroPaginas}"></td>
+                    <td th:text="${libro.isbn}"></td>
+                    <td th:text="${libro.estado.etiqueta}"></td>
+                    <td>
+                        <form th:if="${libro.estado.name() == 'LEIDO'}"
+                              th:action="@{/libros/{id}/calificacion(id=${libro.id})}"
+                              method="post"
+                              class="inline-form">
+                            <select name="calificacion">
+                                <option th:each="n : ${#numbers.sequence(1,5)}"
+                                        th:value="${n}"
+                                        th:selected="${libro.calificacion == n}"
+                                        th:text="${n}"></option>
+                            </select>
+                            <button class="button small" type="submit">Guardar</button>
+                        </form>
+                        <span th:if="${libro.estado.name() != 'LEIDO'}">No aplica</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>Libros no leidos</h2>
+        <ul class="list">
+            <li th:if="${#lists.isEmpty(librosNoLeidos)}">No hay libros pendientes.</li>
+            <li th:each="libro : ${librosNoLeidos}" th:text="${libro.titulo + ' - ' + libro.autor}"></li>
+        </ul>
+    </section>
+</main>
+</body>
+</html>
