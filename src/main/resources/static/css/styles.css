@@ -180,6 +180,13 @@ td {
     gap: 8px;
 }
 
+.form-actions {
+    grid-column: span 2;
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
 .list {
     margin: 0;
     padding-left: 18px;

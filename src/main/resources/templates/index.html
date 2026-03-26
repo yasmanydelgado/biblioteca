@@ -12,14 +12,14 @@
         <div>
             <p class="eyebrow">Aplicacion web con Spring Boot</p>
             <h1>Biblioteca personal de Maria</h1>
-            <p>Gestiona libros, califica lecturas terminadas, identifica tus autores mas leidos y carga o guarda la biblioteca en fichero CSV.</p>
+            <p>Gestiona libros, califica lecturas terminadas, identifica tus autores mas leidos y exporta/importa la biblioteca en formato JSON.</p>
         </div>
 
         <div class="actions">
-            <a class="button secondary" th:href="@{/libros/exportar}">Guardar a fichero CSV</a>
+            <a class="button secondary" th:href="@{/libros/exportar}">Exportar JSON</a>
             <form th:action="@{/libros/importar}" method="post" enctype="multipart/form-data" class="upload-form">
-                <input type="file" name="archivo" accept=".csv" required>
-                <button class="button" type="submit">Cargar fichero</button>
+                <input type="file" name="archivo" accept=".json" required>
+                <button class="button" type="submit">Importar JSON</button>
             </form>
         </div>
     </section>
@@ -29,8 +29,8 @@
 
     <section class="grid">
         <article class="card">
-            <h2>Ingresar libro</h2>
-            <form th:action="@{/libros}" th:object="${libroForm}" method="post" class="form-grid">
+            <h2 th:text="${editando != null and editando} ? 'Editar libro' : 'Ingresar libro'">Ingresar libro</h2>
+            <form th:action="${editando} ? @{/libros/{id}/editar(id=${libroId})} : @{/libros}" th:object="${libroForm}" method="post" class="form-grid">
                 <label>
                     <span>Titulo</span>
                     <input type="text" th:field="*{titulo}">
@@ -64,7 +64,10 @@
                     </select>
                     <small th:if="${#fields.hasErrors('estado')}" th:errors="*{estado}"></small>
                 </label>
-                <button class="button" type="submit">Guardar libro</button>
+                <div class="form-actions">
+                    <button class="button" type="submit" th:text="${editando != null and editando ? 'Actualizar libro' : 'Guardar libro'}">Guardar libro</button>
+                    <a th:if="${editando}" class="button secondary" th:href="@{/}">Cancelar</a>
+                </div>
             </form>
         </article>
 
@@ -101,11 +104,12 @@
                     <th>ISBN</th>
                     <th>Estado</th>
                     <th>Calificacion</th>
+                    <th>Acciones</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:if="${#lists.isEmpty(libros)}">
-                    <td colspan="7">No hay libros registrados.</td>
+                    <td colspan="8">No hay libros registrados.</td>
                 </tr>
                 <tr th:each="libro : ${libros}">
                     <td th:text="${libro.titulo}"></td>
@@ -128,6 +132,9 @@
                             <button class="button small" type="submit">Guardar</button>
                         </form>
                         <span th:if="${libro.estado.name() != 'LEIDO'}">No aplica</span>
+                    </td>
+                    <td>
+                        <a class="button small" th:href="@{/libros/{id}/editar(id=${libro.id})}">Editar</a>
                     </td>
                 </tr>
                 </tbody>

@@ -1,10 +1,7 @@
 package org.example.biblioteca.service;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.example.biblioteca.model.EstadoLibro;
@@ -12,70 +9,72 @@ import org.example.biblioteca.model.Libro;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 @Service
 public class ArchivoLibroService {
 
-    public String exportarCsv(List<Libro> libros) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("titulo;autor;genero;numeroPaginas;isbn;estado;calificacion\n");
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-        for (Libro libro : libros) {
-            builder.append(limpiar(libro.getTitulo())).append(';')
-                .append(limpiar(libro.getAutor())).append(';')
-                .append(limpiar(libro.getGenero())).append(';')
-                .append(libro.getNumeroPaginas()).append(';')
-                .append(limpiar(libro.getIsbn())).append(';')
-                .append(libro.getEstado().name()).append(';')
-                .append(libro.getCalificacion() == null ? "" : libro.getCalificacion())
-                .append('\n');
+    public String exportarJson(List<Libro> libros) {
+        try {
+            List<LibroJson> librosJson = libros.stream()
+                .map(this::toJson)
+                .toList();
+            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(librosJson);
+        } catch (Exception e) {
+            throw new RuntimeException("Error al exportar JSON", e);
         }
-
-        return builder.toString();
     }
 
-    public List<Libro> importarCsv(MultipartFile archivo) {
+    public List<Libro> importarJson(MultipartFile archivo) {
         if (archivo == null || archivo.isEmpty()) {
-            throw new IllegalArgumentException("Debes seleccionar un fichero CSV");
+            throw new IllegalArgumentException("Debes seleccionar un fichero JSON");
         }
 
-        List<Libro> libros = new ArrayList<>();
-
-        try (BufferedReader reader = new BufferedReader(
-            new InputStreamReader(archivo.getInputStream(), StandardCharsets.UTF_8))) {
-
-            String linea = reader.readLine();
-            if (linea == null) {
-                return libros;
-            }
-
-            while ((linea = reader.readLine()) != null) {
-                if (linea.isBlank()) {
-                    continue;
-                }
-
-                String[] columnas = linea.split(";", -1);
-                if (columnas.length < 7) {
-                    throw new IllegalArgumentException("Formato CSV invalido");
-                }
-
-                Libro libro = new Libro();
-                libro.setTitulo(columnas[0].trim());
-                libro.setAutor(columnas[1].trim());
-                libro.setGenero(columnas[2].trim());
-                libro.setNumeroPaginas(Integer.parseInt(columnas[3].trim()));
-                libro.setIsbn(columnas[4].trim());
-                libro.setEstado(EstadoLibro.valueOf(columnas[5].trim()));
-                libro.setCalificacion(columnas[6].isBlank() ? null : Integer.parseInt(columnas[6].trim()));
-                libros.add(libro);
-            }
-
-            return libros;
-        } catch (IOException | RuntimeException ex) {
-            throw new IllegalArgumentException("No se pudo leer el fichero CSV", ex);
+        try {
+            String contenido = new String(archivo.getBytes(), StandardCharsets.UTF_8);
+            List<LibroJson> librosJson = objectMapper.readValue(contenido, new TypeReference<List<LibroJson>>() {});
+            return librosJson.stream()
+                .map(this::fromJson)
+                .toList();
+        } catch (IOException e) {
+            throw new IllegalArgumentException("No se pudo leer el fichero JSON: " + e.getMessage());
         }
     }
 
-    private String limpiar(String valor) {
-        return valor == null ? "" : valor.replace(';', ',').trim();
+    private LibroJson toJson(Libro libro) {
+        LibroJson json = new LibroJson();
+        json.titulo = libro.getTitulo();
+        json.autor = libro.getAutor();
+        json.genero = libro.getGenero();
+        json.numeroPaginas = libro.getNumeroPaginas();
+        json.isbn = libro.getIsbn();
+        json.estado = libro.getEstado().name();
+        json.calificacion = libro.getCalificacion();
+        return json;
+    }
+
+    private Libro fromJson(LibroJson json) {
+        Libro libro = new Libro();
+        libro.setTitulo(json.titulo);
+        libro.setAutor(json.autor);
+        libro.setGenero(json.genero);
+        libro.setNumeroPaginas(json.numeroPaginas);
+        libro.setIsbn(json.isbn);
+        libro.setEstado(EstadoLibro.valueOf(json.estado));
+        libro.setCalificacion(json.calificacion);
+        return libro;
+    }
+
+    private static class LibroJson {
+        public String titulo;
+        public String autor;
+        public String genero;
+        public Integer numeroPaginas;
+        public String isbn;
+        public String estado;
+        public Integer calificacion;
     }
 }

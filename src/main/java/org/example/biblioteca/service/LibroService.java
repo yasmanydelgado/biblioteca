@@ -83,4 +83,32 @@ public class LibroService {
         libroRepository.deleteAllInBatch();
         libroRepository.saveAll(libros);
     }
+
+    @Transactional(readOnly = true)
+    public Libro buscarPorId(Long id) {
+        return libroRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Libro no encontrado"));
+    }
+
+    @Transactional
+    public void actualizarLibro(Long id, LibroForm form) {
+        Libro libro = libroRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Libro no encontrado"));
+
+        // Verificar que el ISBN no este en uso por otro libro
+        libroRepository.findByIsbn(form.getIsbn())
+            .ifPresent(otroLibro -> {
+                if (!otroLibro.getId().equals(id)) {
+                    throw new IllegalArgumentException("Ya existe otro libro con ese ISBN");
+                }
+            });
+
+        libro.setTitulo(form.getTitulo().trim());
+        libro.setAutor(form.getAutor().trim());
+        libro.setGenero(form.getGenero().trim());
+        libro.setNumeroPaginas(form.getNumeroPaginas());
+        libro.setIsbn(form.getIsbn().trim());
+        libro.setEstado(form.getEstado());
+        libroRepository.save(libro);
+    }
 }
