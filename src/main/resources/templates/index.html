@@ -16,11 +16,16 @@
         </div>
 
         <div class="actions">
-            <a class="button secondary" th:href="@{/libros/exportar}">Exportar JSON</a>
             <form th:action="@{/libros/importar}" method="post" enctype="multipart/form-data" class="upload-form">
-                <input type="file" name="archivo" accept=".json" required>
+                <label class="file-input-wrapper">
+                    <input type="file" name="archivo" accept=".json" required>
+                    <span class="file-input-label">Elegir archivo JSON</span>
+                </label>
                 <button class="button" type="submit">Importar JSON</button>
             </form>
+            <div class="export-buttons">
+                <a class="button secondary small" th:href="@{/libros/exportar}">Exportar JSON</a>
+            </div>
         </div>
     </section>
 
