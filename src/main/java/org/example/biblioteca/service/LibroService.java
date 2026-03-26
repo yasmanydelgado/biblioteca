@@ -111,4 +111,11 @@ public class LibroService {
         libro.setEstado(form.getEstado());
         libroRepository.save(libro);
     }
+
+    @Transactional
+    public void eliminarLibro(Long id) {
+        Libro libro = libroRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Libro no encontrado"));
+        libroRepository.delete(libro);
+    }
 }

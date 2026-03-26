@@ -112,6 +112,13 @@ public class LibroController {
         return "redirect:/";
     }
 
+    @PostMapping("/libros/{id}/eliminar")
+    public String eliminarLibro(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        libroService.eliminarLibro(id);
+        redirectAttributes.addFlashAttribute("mensaje", "Libro eliminado correctamente");
+        return "redirect:/";
+    }
+
     @GetMapping("/libros/exportar")
     public ResponseEntity<ByteArrayResource> exportarJson() {
         String contenido = archivoLibroService.exportarJson(libroService.listarOrdenadosPorTitulo());

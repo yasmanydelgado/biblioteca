@@ -19,13 +19,21 @@
             <form th:action="@{/libros/importar}" method="post" enctype="multipart/form-data" class="upload-form">
                 <label class="file-input-wrapper">
                     <input type="file" name="archivo" accept=".json" required>
-                    <span class="file-input-label">Elegir archivo JSON</span>
+                    <span class="file-input-label">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="12" y1="18" x2="12" y2="12"/>
+                            <line x1="9" y1="15" x2="15" y2="15"/>
+                        </svg>
+                        Elegir archivo
+                    </span>
                 </label>
-                <button class="button" type="submit">Importar JSON</button>
+                <div class="import-export-buttons">
+                    <button class="button" type="submit">Importar</button>
+                    <a class="button secondary" th:href="@{/libros/exportar}">Exportar</a>
+                </div>
             </form>
-            <div class="export-buttons">
-                <a class="button secondary small" th:href="@{/libros/exportar}">Exportar JSON</a>
-            </div>
         </div>
     </section>
 
@@ -138,8 +146,17 @@
                         </form>
                         <span th:if="${libro.estado.name() != 'LEIDO'}">No aplica</span>
                     </td>
-                    <td>
+                    <td class="actions-cell">
                         <a class="button small" th:href="@{/libros/{id}/editar(id=${libro.id})}">Editar</a>
+                        <button class="button-icon danger" type="submit" form="delete-${libro.id}" onclick="return confirm('¿Seguro que quieres eliminar este libro?')" title="Eliminar">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                <line x1="10" y1="11" x2="10" y2="17"/>
+                                <line x1="14" y1="11" x2="14" y2="17"/>
+                            </svg>
+                        </button>
+                        <form id="delete-${libro.id}" th:action="@{/libros/{id}/eliminar(id=${libro.id})}" method="post" hidden></form>
                     </td>
                 </tr>
                 </tbody>
